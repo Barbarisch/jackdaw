@@ -2,6 +2,7 @@ import json
 import enum
 import ipaddress
 import datetime
+import traceback
 
 
 class UniversalEncoder(json.JSONEncoder):
@@ -18,5 +19,8 @@ class UniversalEncoder(json.JSONEncoder):
 			return str(obj)
 		elif hasattr(obj, 'to_dict'):
 			return obj.to_dict()
+		elif isinstance(obj, bytes):
+			print('WTF', type(obj), obj)
+			input()
 		else:
 			return json.JSONEncoder.default(self, obj)

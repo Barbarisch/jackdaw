@@ -20,12 +20,13 @@ from jackdaw.dbmodel.adou import ADOU
 
 
 def pretty(d, indent=0):
-   for key, value in d.items():
-      print('\t' * indent + str(key))
-      if isinstance(value, dict):
-        pretty(value, indent+1)
-      else:
-        print('\t' * (indent+1) + str(value))
+	for key, value in d.items():
+		print('\t' * indent + str(key))
+		if isinstance(value, dict):
+			pretty(value, indent+1)
+		else:
+			print('\t' * (indent+1) + str(value))
+
 
 def convert_to_dt(s):
 	if not isinstance(s, int):
@@ -44,25 +45,25 @@ def convert_to_dt(s):
 	
 	return datetime.datetime.utcfromtimestamp(s)
 
-same_labels = {
-	'WriteOwner' : 1,
-	'Owner' : 1,
-	'WriteDacl' : 1,
-	'GenericWrite' : 1,
-	'AddMember' : 1,
-	'GetChanges' : 1,
-	'ReadLAPSPassword' : 1,
-	'User-Force-Change-Password' : 1,
-	#'' : 1,
-	#'' : 1,
-	#'' : 1,
-	#'' : 1,
 
+same_labels = {
+	'WriteOwner': 1,
+	'Owner': 1,
+	'WriteDacl': 1,
+	'GenericWrite': 1,
+	'AddMember': 1,
+	'GetChanges': 1,
+	'ReadLAPSPassword': 1,
+	'User-Force-Change-Password': 1,
+	# '' : 1,
+	# '' : 1,
+	# '' : 1,
+	# '' : 1,
 }
 
 
 class BHImport:
-	def __init__(self, db_conn = None, db_session = None):
+	def __init__(self, db_conn=None, db_session=None):
 		self.debug = False
 		self.graphid = None
 		self.zipfile = None
@@ -76,15 +77,14 @@ class BHImport:
 		self.is_zip = False
 		self.fd = {}
 		self.ads = {}
-		self.adn = {} #name -> ad_id
+		self.adn = {}  # name -> ad_id
 
-		#self.setup_db()
-		self.sid_id_cache = {} #sid - > id
-		self.sid_name_cache = {} #oname -> sid v2
+		# self.setup_db()
+		self.sid_id_cache = {}  # sid - > id
+		self.sid_name_cache = {}  # oname -> sid v2
 		self.edges = []
 		self.spns = []
 		self.disable_print_progress = True if platform.system() == 'Emscripten' else False
-
 
 	def setup_db(self):
 		if self.db_session is None:
@@ -103,7 +103,7 @@ class BHImport:
 			return rightname
 		elif rightname == 'GenericAll':
 			return 'GenericALL'
-		elif rightname == 'All': #this only appears in the extendedrights
+		elif rightname == 'All':  # this only appears in the extendedrights
 			return 'ExtendedAll'
 		elif rightname == 'GetChangesAll':
 			return 'GetChangesALL'
@@ -138,16 +138,16 @@ class BHImport:
 	def process_spn(spn, owner_sid):
 		port = None
 		service_name = None
-		service_class, t = spn.split('/',1)
+		service_class, t = spn.split('/', 1)
 		m = t.find(':')
 		if m != -1:
-			computername, port = t.rsplit(':',1)
+			computername, port = t.rsplit(':', 1)
 			if port.find('/') != -1:
-				port, service_name = port.rsplit('/',1)
+				port, service_name = port.rsplit('/', 1)
 		else:
 			computername = t
 			if computername.find('/') != -1:
-				computername, service_name = computername.rsplit('/',1)
+				computername, service_name = computername.rsplit('/', 1)
 
 		s = SPNService()
 		s.owner_sid = owner_sid
@@ -165,25 +165,25 @@ class BHImport:
 		pattern_loc = sid.find('S-1-')
 		if pattern_loc == -1:
 			return sid, None, sid, True
-			#raise Exception('Cant parse group sid! %s' % (sid,))
+			# raise Exception('Cant parse group sid! %s' % (sid,))
 		elif pattern_loc != 0:
 			real_sid = sid[pattern_loc:]
 			sub_name = sid[:pattern_loc-1]
 			res_domain = self.db_session.query(ADInfo).get(ad_id)
 			if res_domain is None:
 				raise Exception('breakup_groupsid Cound not find domain with  %s' % ad_id)
-				#print(ad_id)
-				#print(sid)
-				#input()
+				# print(ad_id)
+				# print(sid)
+				# input()
 			if res_domain is None or res_domain.name.lower() != sub_name.lower():
 				res_machine = self.db_session.query(Machine).filter_by(name = sub_name).filter(Machine.ad_id == ad_id).first()
 				if res_machine is None:
 					raise Exception('breakup_groupsid Cound not find machine for name %s' % sub_name)
-					#print(sid)
-					#print(sub_name)
-					#print(res_domain.name)
-					#print('rs %s ' % real_sid)
-					#input()
+					# print(sid)
+					# print(sub_name)
+					# print(res_domain.name)
+					# print('rs %s ' % real_sid)
+					# input()
 				else:
 					is_domainsid = False
 					machine_sid = res_machine.objectSid
@@ -217,7 +217,7 @@ class BHImport:
 		else:
 			# this should not happen normally...
 			if res.otype == 'unknown' and objtype != 'unknown':
-				#print('replacing unknown with %s' % objtype)
+				# print('replacing unknown with %s' % objtype)
 				res.otype = objtype
 				self.db_session.add(res)
 				self.db_session.commit()
@@ -236,12 +236,11 @@ class BHImport:
 
 	def add_edge(self, srcsid, srctype, dstsid, dsttype, label, adid):
 		self.edges.append((srcsid, srctype, dstsid, dsttype, label, adid))
-		
 
 	def sid_name_lookup_v2(self, oname, otype, adid):
 		if oname in self.sid_name_cache:
 			return self.sid_name_cache[oname]
-		name = oname.split('@',1)[0]
+		name = oname.split('@', 1)[0]
 		if otype.lower() == 'group':
 			res = self.db_session.query(Group).filter_by(name=name).filter(Group.ad_id == adid).first()
 			if res is None:
@@ -262,7 +261,6 @@ class BHImport:
 			return res.objectSid
 		else:
 			raise Exception('Could not find oname %s otype %s in adid %s' % (oname, otype, adid))
-			
 
 	def insert_all_acls(self):
 		if self.bloodhound_version == '2':
@@ -300,7 +298,7 @@ class BHImport:
 					else:
 						label = BHImport.convert_label(ace['RightName'])
 					
-					#self.add_edge()
+					# self.add_edge()
 					edge = Edge(adid, self.graphid, src, dst, label)
 					self.db_session.add(edge)
 
@@ -311,7 +309,7 @@ class BHImport:
 					s = BHImport.process_spn(spn, sid)
 					self.db_session.add(s)
 					if s.service_class == 'MSSQLSvc':
-						res = self.db_session.query(Machine).filter_by(dNSHostName = s.computername.upper()).filter(Machine.ad_id == ad_id).first()
+						res = self.db_session.query(Machine).filter_by(dNSHostName=s.computername.upper()).filter(Machine.ad_id == ad_id).first()
 						if res is not None:
 							self.add_edge(sid, 'user', res.objectSid, 'machine', 'sqladmin', ad_id)
 						else:
@@ -344,7 +342,7 @@ class BHImport:
 				if self.bloodhound_version == '2':
 					m = Machine()
 					m.ad_id = self.adn[machine['Properties']['domain']]
-					#m.dn = machine['Properties']['distinguishedname']
+					# m.dn = machine['Properties']['distinguishedname']
 					m.canLogon = machine['Properties'].get('enabled')
 					m.lastLogonTimestamp = convert_to_dt(machine['Properties'].get('lastlogontimestamp'))
 					m.pwdLastSet = convert_to_dt(machine['Properties'].get('pwdlastset'))
@@ -361,9 +359,9 @@ class BHImport:
 						hvt = ADObjProps(self.graphid, m.objectSid, 'HVT')
 						self.db_session.add(hvt)
 
-					#m.operatingSystemVersion  = machine['Properties']['operatingsystem']
+					# m.operatingSystemVersion  = machine['Properties']['operatingsystem']
 
-					#not importing [Properties][haslaps] [Properties][serviceprincipalnames] 
+					# not importing [Properties][haslaps] [Properties][serviceprincipalnames]
 					# [AllowedToDelegate] [AllowedToAct]
 
 				else:
@@ -380,7 +378,7 @@ class BHImport:
 					m.objectSid = machine['Properties']['objectid']
 					m.description = machine['Properties']['description']
 					m.UAC_TRUSTED_FOR_DELEGATION = machine['Properties'].get('unconstraineddelegation')
-					#m.operatingSystemVersion  = machine['Properties']['operatingsystem']
+					# m.operatingSystemVersion  = machine['Properties']['operatingsystem']
 
 					if machine['Properties'].get('highvalue') is True:
 						hvt = ADObjProps(self.graphid, m.objectSid, 'HVT')
@@ -399,7 +397,7 @@ class BHImport:
 							self.add_edge(session['ComputerId'], 'machine', session['UserId'], 'user', 'hasSession', m.ad_id)
 							self.db_session.add(s)
 
-					#not importing [Properties][haslaps] [AllowedToDelegate] [AllowedToAct]
+					# not importing [Properties][haslaps] [AllowedToDelegate] [AllowedToAct]
 
 				if 'LocalAdmins' in machine and machine['LocalAdmins'] is not None:
 					for localadmin in machine['LocalAdmins']:
@@ -482,7 +480,7 @@ class BHImport:
 				self.db_session.add(m)
 				edgeinfo = EdgeLookup(m.ad_id, m.objectSid, 'machine')
 				self.db_session.add(edgeinfo)
-				#self.db_session.commit()
+				# self.db_session.commit()
 
 				if machine['Aces'] is not None:
 					self.insert_acl(m.objectSid, 'machine', machine['Aces'], m.ad_id)
@@ -492,7 +490,6 @@ class BHImport:
 				continue
 
 		self.db_session.commit()
-
 
 	def import_users(self):
 		logger.debug('[BHIMPORT] Importing users')		
@@ -523,7 +520,9 @@ class BHImport:
 					m.UAC_TRUSTED_FOR_DELEGATION = user['Properties'].get('unconstraineddelegation')
 					m.adminCount = user['Properties'].get('admincount')
 
-					#not importing [Properties][highvalue] [Properties][hasspn] [Properties][title] [Properties][homedirectory] [Properties][userpassword] [Properties][sensitive] [AllowedToDelegate] [SPNTargets]
+					# not importing [Properties][highvalue] [Properties][hasspn] [Properties][title]
+					# [Properties][homedirectory] [Properties][userpassword] [Properties][sensitive]
+					# [AllowedToDelegate] [SPNTargets]
 
 				else:
 					m = ADUser()
@@ -547,7 +546,9 @@ class BHImport:
 					m.lastLogon = convert_to_dt(user['Properties']['lastlogon'])
 					m.displayName = user['Properties']['displayname']
 
-					#not importing [Properties][highvalue] [Properties][hasspn]  [Properties][sidhistory] [Properties][title] [Properties][homedirectory] [Properties][userpassword] [Properties][sensitive] [HasSIDHistory] [AllowedToDelegate] [SPNTargets]
+					# not importing [Properties][highvalue] [Properties][hasspn]  [Properties][sidhistory]
+					# [Properties][title] [Properties][homedirectory] [Properties][userpassword]
+					# [Properties][sensitive] [HasSIDHistory] [AllowedToDelegate] [SPNTargets]
 
 				if user['Properties'].get('highvalue') is True:
 					hvt = ADObjProps(self.graphid, m.objectSid, 'HVT')
@@ -561,7 +562,7 @@ class BHImport:
 				self.db_session.add(m)
 				edgeinfo = EdgeLookup(m.ad_id, m.objectSid, 'user')
 				self.db_session.add(edgeinfo)
-				#self.db_session.commit()
+				# self.db_session.commit()
 
 				if user['Aces'] is not None:
 					self.insert_acl(m.objectSid, 'user', user['Aces'], m.ad_id)
@@ -596,7 +597,7 @@ class BHImport:
 				if machine_sid is None:
 					logger.debug('Missing computer! Skipping session %s' % session)
 					continue
-					#raise Exception('Could not find machine!')
+					# raise Exception('Could not find machine!')
 				
 				machine_sid = machine_sid[0]
 
@@ -610,7 +611,7 @@ class BHImport:
 				if user_sid is None:
 					logger.debug('Missing user! Skipping session %s' % session)
 					continue
-					#raise Exception('Could not find user!')
+					# raise Exception('Could not find user!')
 				
 				user_sid = user_sid[0]
 				self.add_edge(machine_sid, 'machine', user_sid, 'user', 'session', self.adn[ad_name])
@@ -642,7 +643,7 @@ class BHImport:
 						hvt = ADObjProps(self.graphid, m.objectGUID, 'HVT')
 						self.db_session.add(hvt)
 
-					#not importing [ChildOus] [Properties][blocksinheritance][Computers]
+					# not importing [ChildOus] [Properties][blocksinheritance][Computers]
 
 				else:
 					ad_name = ou['Properties']['name'].rsplit('@', 1)[1]
@@ -657,11 +658,12 @@ class BHImport:
 						hvt = ADObjProps(self.graphid, m.objectGUID, 'HVT')
 						self.db_session.add(hvt)
 
-					#not importing [ChildOus] [Properties][blocksinheritance] [Users] [RemoteDesktopUsers] [PSRemoteUsers] [LocalAdmins] [Computers] [DcomUsers] [ACLProtected]
+					# not importing [ChildOus] [Properties][blocksinheritance] [Users] [RemoteDesktopUsers]
+					# [PSRemoteUsers] [LocalAdmins] [Computers] [DcomUsers] [ACLProtected]
 
 				if 'Links' in ou and ou['Links'] is not None:
 					for link in ou['Links']:
-						#input(link)
+						# input(link)
 						l = Gplink()
 						l.ad_id = m.ad_id
 						l.ou_guid = m.objectGUID
@@ -676,7 +678,7 @@ class BHImport:
 							l.gpo_dn = '{%s}' % link['Guid']
 						self.db_session.add(l)
 
-					#not importing [IsEnforced]
+					# not importing [IsEnforced]
 
 				self.db_session.add(m)
 				edgeinfo = EdgeLookup(m.ad_id, m.objectGUID, 'ou')
@@ -690,7 +692,6 @@ class BHImport:
 				logger.debug('[BHIMPORT] Error while processing OU %s Reason: %s' % (ou,e))
 				continue
 		self.db_session.commit()
-		
 
 	def import_domains(self):
 		gi = GraphInfo('bloodhound import')
@@ -718,15 +719,15 @@ class BHImport:
 					di.objectSid = domain['Properties']['objectsid']
 					di.distinguishedName = 'DC='.join(domain['Name'].split('.'))
 
-					#not importing: [Properties][functionallevel] , [Properties][description], [Links], [Trusts]
+					# not importing: [Properties][functionallevel] , [Properties][description], [Links], [Trusts]
 
 				else:
 					di.name = domain['Properties']['name']
 					di.objectSid = domain['Properties']['objectid']
 					di.distinguishedName = domain['Properties']['distinguishedname']
 
-					#not importing: [Properties][functionallevel] , [Properties][description], [ChildOus], [Links], [Trusts]
-
+					# not importing: [Properties][functionallevel] , [Properties][description],
+					# [ChildOus], [Links], [Trusts]
 
 				self.db_session.add(di)
 				self.db_session.commit()
@@ -865,7 +866,7 @@ class BHImport:
 						q_ad_name = groups['Name'].rsplit('@', 1)[1]
 						q_ad_id = self.adn[q_ad_name]
 						q_groupname = groups['Name'].split('@', 1)[0]
-						res = self.db_session.query(Group).filter_by(name = q_groupname).filter(Group.ad_id == q_ad_id).first()
+						res = self.db_session.query(Group).filter_by(name=q_groupname).filter(Group.ad_id == q_ad_id).first()
 						if res is None:
 							raise Exception('Group not found ! %s ' % groups['Name'])
 						self.add_edge(res.objectSid, BHImport.member_type_lookup(item['MemberType']), m.oid, 'group', 'member', self.adn[ad_name])
@@ -874,7 +875,7 @@ class BHImport:
 					for item in groups['Members']:
 						self.add_edge(item['MemberId'], BHImport.member_type_lookup(item['MemberType']), m.oid, 'group', 'member', self.adn[ad_name])
 					
-				if  groups['Aces'] is not None:
+				if groups['Aces'] is not None:
 					self.insert_acl(m.oid, 'group', groups['Aces'], m.ad_id)
 				
 			except Exception as e:
@@ -933,7 +934,7 @@ class BHImport:
 			for ace in gpo['Aces']:
 				pl[ace['RightName']] = 1
 
-		for domain in self.get_file('domains')['domains']:#['computers']:
+		for domain in self.get_file('domains')['domains']:  # ['computers']:
 			for ace in domain['Aces']:
 				pl[ace['RightName']] = 1
 		
@@ -942,12 +943,11 @@ class BHImport:
 				pl[ace['RightName']] = 1
 
 
-		#for session in self.get_file('sessions')['sessions']:
+		# for session in self.get_file('sessions')['sessions']:
 		#	for ace in session['Aces']:
 		#		for k in ace.keys():
 		#			pl[k] = 1
 
-		
 		for user in self.get_file('users')['users']:
 			for ace in user['Aces']:
 				pl[ace['RightName']] = 1
@@ -959,7 +959,7 @@ class BHImport:
 		print(pl)
 
 	def run(self):
-		#DO NOT CHANGE THIS ORDER!!!!
+		# DO NOT CHANGE THIS ORDER!!!!
 		self.setup_db()
 
 		self.import_domains()

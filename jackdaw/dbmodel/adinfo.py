@@ -12,6 +12,7 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, BigInteger
 from jackdaw._version import __version__
 from jackdaw.dbmodel.utils.serializer import Serializer
 
+
 class ADInfo(Basemodel, Serializer):
 	__tablename__ = 'adinfo'
 	
@@ -150,7 +151,6 @@ class ADInfo(Basemodel, Serializer):
 		adinfo.gen_checksum()
 		return adinfo
 
-
 	@staticmethod
 	def from_msldap(d):
 		adinfo = ADInfo()
@@ -170,7 +170,7 @@ class ADInfo(Basemodel, Serializer):
 		adinfo.name = d.name
 		adinfo.nextRid = d.nextRid
 		adinfo.objectCategory = d.objectCategory
-		adinfo.objectClass =  lf(d.objectClass)
+		adinfo.objectClass = lf(d.objectClass)
 		adinfo.objectGUID = d.objectGUID
 		adinfo.objectSid = d.objectSid
 		adinfo.pwdHistoryLength = d.pwdHistoryLength
@@ -188,6 +188,6 @@ class ADInfo(Basemodel, Serializer):
 		return adinfo
 	
 	def get_domainname(self):
-		name = self.distinguishedName.replace('DC=','')
-		name = name.replace(',','.')
+		name = self.distinguishedName.replace('DC=', '')
+		name = name.replace(',', '.')
 		return name

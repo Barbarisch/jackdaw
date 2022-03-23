@@ -8,6 +8,7 @@ from jackdaw.utils.encoder import UniversalEncoder
 from jackdaw.dbmodel.utils.serializer import Serializer
 import hashlib
 
+
 class ADUser(Basemodel, Serializer):
 	__tablename__ = 'users'
 

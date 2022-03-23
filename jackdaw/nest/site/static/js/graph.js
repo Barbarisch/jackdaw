@@ -79,7 +79,7 @@ function draw_graph(container, graph_data){
     },
     // http://visjs.org/docs/network/physics.html#
     physics: {
-      enabled: true,
+      enabled: false,
       barnesHut: {
         gravitationalConstant: -2000,
         centralGravity: 0.3,

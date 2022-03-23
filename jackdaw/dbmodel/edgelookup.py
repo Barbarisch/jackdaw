@@ -5,6 +5,7 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
 import json
 from jackdaw.dbmodel.utils.serializer import Serializer
 
+
 class EdgeLookup(Basemodel, Serializer):
 	__tablename__ = 'adedgelookup'
 	

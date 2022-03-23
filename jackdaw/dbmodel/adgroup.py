@@ -5,6 +5,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from jackdaw.dbmodel.utils.serializer import Serializer
 
+
 class Group(Basemodel, Serializer):
 	__tablename__ = 'adgroups'
 	

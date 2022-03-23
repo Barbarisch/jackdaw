@@ -5,6 +5,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
 from jackdaw.dbmodel.utils.serializer import Serializer
 
+
 class GPO(Basemodel, Serializer):
 	__tablename__ = 'adgpo'
 

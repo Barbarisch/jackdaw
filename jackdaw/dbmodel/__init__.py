@@ -15,6 +15,7 @@ from winacl.dtyp.ace import ADS_ACCESS_MASK, AceFlags
 
 Basemodel = declarative_base()
 
+
 def windowed_query(q, column, windowsize, is_single_entity = True):
 	""""Break a Query into chunks on a given column."""
 
@@ -36,6 +37,7 @@ def windowed_query(q, column, windowsize, is_single_entity = True):
 			else:
 				yield row[0:-1]
 
+
 @event.listens_for(Engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):
 	##
@@ -54,7 +56,6 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
 	cursor.close()
 
 
-
 def lf(x, sep = ','):
 	"""
 	flattens objects
@@ -66,7 +67,8 @@ def lf(x, sep = ','):
 	elif isinstance(x, (datetime.datetime, int, enum.IntFlag)):
 		return x
 	return str(x)
-	
+
+
 def dt(x):
 	"""
 	datetime corrections
@@ -78,7 +80,8 @@ def dt(x):
 	if not isinstance(x,datetime.datetime):
 		print(x)
 	return x
-	
+
+
 def bc(x):
 	"""
 	boolean corrections
@@ -95,6 +98,7 @@ def bc(x):
 		elif x.upper() == 'NONE':
 			return None
 	raise Exception('Cant convert this to bool: %s type: %s' % (x, type(x)))
+
 
 from .adgroup import *
 from .adcomp import *
@@ -136,11 +140,13 @@ from .regsession import RegSession
 from .smbinterface import SMBInterface
 from .smbfile import SMBFile
 from .kerberostickets import KerberosTicket
+from .ace import Ace
+from .member import Member
 
 
 def create_db(connection, verbosity = 0, inmemory = False):
 	logging.info('Creating database %s' % connection)
-	engine = create_engine(connection, echo=True if verbosity > 1 else False) #'sqlite:///dump.db'	
+	engine = create_engine(connection, echo=True if verbosity > 1 else False)  # 'sqlite:///dump.db'
 	Basemodel.metadata.create_all(engine)
 	Session = sessionmaker(engine)
 	try:
@@ -162,6 +168,7 @@ def create_db(connection, verbosity = 0, inmemory = False):
 		if inmemory is False:
 			session.close()
 	logging.info('Done creating database %s' % connection)
+
 
 def get_session(connection, verbosity = 0):
 	logging.debug('Connecting to DB')

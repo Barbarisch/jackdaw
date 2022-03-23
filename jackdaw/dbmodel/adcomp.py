@@ -9,6 +9,7 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
 from jackdaw.dbmodel.utils.serializer import Serializer
 from jackdaw.dbmodel.utils.uacflags import calc_uac_flags
 
+
 class Machine(Basemodel, Serializer):
 	__tablename__ = 'admachines'
 
