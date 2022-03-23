@@ -66,23 +66,22 @@ class ADTrust(Basemodel, Serializer):
 
 		return trust
 
-
 	def to_dict(self):
 		return {
-			'id' : self.id ,
-			'ad_id' : self.ad_id ,
-			'cn' : self.cn ,
-			'dn' : self.dn ,
-			'guid' : self.guid ,
-			'name' : self.name ,
-			'securityIdentifier' : self.securityIdentifier ,
-			'whenChanged' : self.whenChanged ,
-			'whenCreated' : self.whenCreated ,
-			'trustDirection' : self.trustDirection ,
-			'trustPartner' : self.trustPartner ,
-			'trustPosixOffset' : self.trustPosixOffset ,
-			'trustType' : self.trustType ,
-			'trustAttributes' : self.trustAttributes ,
-			'flatName' : self.flatName ,
-			'checksum' : self.checksumm
+			'id': self.id,
+			'ad_id': self.ad_id,
+			'cn': self.cn,
+			'dn': self.dn,
+			'guid': self.guid,
+			'name': self.name,
+			'securityIdentifier': self.securityIdentifier,
+			'whenChanged': self.whenChanged,
+			'whenCreated': self.whenCreated,
+			'trustDirection': self.trustDirection,
+			'trustPartner': self.trustPartner,
+			'trustPosixOffset': self.trustPosixOffset,
+			'trustType': self.trustType,
+			'trustAttributes': self.trustAttributes,
+			'flatName': self.flatName,
+			'checksum': self.checksumm
 		}

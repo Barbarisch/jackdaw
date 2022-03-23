@@ -1,9 +1,9 @@
-
 from flask import current_app
 from jackdaw.dbmodel.aduser import ADUser
-from jackdaw.dbmodel.adcomp import Machine
+from jackdaw.dbmodel.admachine import Machine
 from jackdaw.dbmodel.adinfo import ADInfo
 from jackdaw.dbmodel.smbfinger import SMBFinger
+
 
 def list_machines(domainid, page, maxcnt):
 	db = current_app.db

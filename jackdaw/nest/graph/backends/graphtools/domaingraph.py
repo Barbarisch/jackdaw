@@ -4,7 +4,7 @@ import pathlib
 import multiprocessing as mp
 from jackdaw import logger
 from jackdaw.dbmodel.adtrust import ADTrust
-from jackdaw.dbmodel.adcomp import Machine
+from jackdaw.dbmodel.admachine import Machine
 from jackdaw.dbmodel.aduser import ADUser
 from jackdaw.dbmodel.adgroup import Group
 from jackdaw.dbmodel.adinfo import ADInfo
@@ -23,6 +23,7 @@ from graph_tool.topology import all_shortest_paths, shortest_path, shortest_dist
 
 class JackDawDomainGraphGrapthTools:
 	graph_file_name = 'graphtools.csv'
+
 	def __init__(self, dbsession, graph_id):
 		self.dbsession = dbsession
 		self.graph_id = int(graph_id)

@@ -10,7 +10,7 @@ import hashlib
 
 
 class ADUser(Basemodel, Serializer):
-	__tablename__ = 'users'
+	__tablename__ = 'adusers'
 
 	# Now for the attributes
 	id = Column(Integer, primary_key=True)
@@ -31,10 +31,12 @@ class ADUser(Basemodel, Serializer):
 	sAMAccountName = Column(String, index=True)
 	userPrincipalName = Column(String)
 	servicePrincipalName = Column(String)
-	## groups
-	memberOf = Column(String) #list, should be extra table
-	member = Column(String) #list, should be extra table
-	## times
+
+	# groups
+	memberOf = Column(String)  # list, should be extra table
+	member = Column(String)  # list, should be extra table
+
+	# times
 	accountExpires = Column(DateTime)
 	badPasswordTime = Column(DateTime)
 	lastLogoff = Column(DateTime)
@@ -43,18 +45,19 @@ class ADUser(Basemodel, Serializer):
 	pwdLastSet = Column(DateTime)
 	whenChanged = Column(DateTime)
 	whenCreated = Column(DateTime)
-	## security
+
+	# security
 	badPwdCount = Column(Integer)
 	logonCount = Column(Integer)
 	sAMAccountType = Column(Integer)
 	userAccountControl = Column(Integer)
 	adminCount = Column(Integer)
 	
-	## other
+	# other
 	codePage = Column(Integer)
 	countryCode = Column(Integer)
 	
-	## calculated properties
+	# calculated properties
 	when_pw_change = Column(DateTime)
 	when_pw_expires = Column(DateTime)
 	must_change_pw = Column(DateTime)
@@ -85,7 +88,7 @@ class ADUser(Basemodel, Serializer):
 	UAC_PASSWORD_EXPIRED = Column(Boolean)
 	UAC_TRUSTED_TO_AUTHENTICATE_FOR_DELEGATION = Column(Boolean)
 
-	checksum = Column(String, index = True)
+	checksum = Column(String, index=True)
 
 	def gen_checksum(self):
 		ctx = hashlib.md5()

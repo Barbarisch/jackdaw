@@ -17,7 +17,7 @@ class JackDawSPN(Basemodel, Serializer):
 
 
 	@staticmethod
-	def from_spn_str(s, user_sid = None):
+	def from_spn_str(s, user_sid=None):
 		uspn = JackDawSPN()
 		port = None
 		service_name = None

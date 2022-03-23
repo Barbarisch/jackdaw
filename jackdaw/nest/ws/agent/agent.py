@@ -41,8 +41,6 @@ from jackdaw.dbmodel.kerberoast import Kerberoast as DBKerberoast
 from jackdaw.nest.ws.protocol import *
 from jackdaw.gatherer.smb.utils import sizeof_fmt
 
-
-
 from jackdaw import logger
 from jackdaw.gatherer.gatherer import Gatherer
 from jackdaw.nest.ws.protocol.agent.agent import NestOpAgent
@@ -50,7 +48,7 @@ from jackdaw.nest.ws.protocol.smb.smbfileres import NestOpSMBFileRes
 
 from jackdaw.gatherer.progress import GathererProgressType
 
-from jackdaw.dbmodel.adcomp import Machine
+from jackdaw.dbmodel.admachine import Machine
 from jackdaw.dbmodel.dnslookup import DNSLookup
 from jackdaw.dbmodel.credential import Credential
 from jackdaw.dbmodel.customcred import CustomCred
@@ -63,7 +61,7 @@ from aiosmb.connection import SMBConnection
 from aiosmb.commons.interfaces.machine import SMBMachine
 
 from jackdaw.dbmodel.netsession import NetSession
-from jackdaw.dbmodel.adcomp import Machine
+from jackdaw.dbmodel.admachine import Machine
 from jackdaw.dbmodel.aduser import ADUser
 from jackdaw.dbmodel.adobjprops import ADObjProps
 from jackdaw.dbmodel.credential import Credential
@@ -96,13 +94,13 @@ STANDARD_PROGRESS_MSG_TYPES = [
 	GathererProgressType.INFO,
 ]
 
+
 class CONNECTIONPROTO:
 	SMB = 'SMB'
 	KERBEROS = 'KERBEROS'
 	LDAP = 'LDAP'
 	RDP = 'RDP'
 	DNS = 'DNS'
-
 
 
 class JackDawAgent:
@@ -121,7 +119,7 @@ class JackDawAgent:
 		self.internal_id = internal_id
 		self.connection_via = []
 		self.db_session = db_session
-		self.proxy = proxy #this is a mandatory-first proxy to use. if the agent is internal then it's none
+		self.proxy = proxy  # this is a mandatory-first proxy to use. if the agent is internal then it's none
 		self.cmd_in_q = None
 		self.work_dir = work_dir
 		self.show_progress = True

@@ -1,6 +1,6 @@
 from flask import current_app
 from jackdaw.dbmodel.aduser import ADUser
-from jackdaw.dbmodel.adcomp import Machine
+from jackdaw.dbmodel.admachine import Machine
 from jackdaw.dbmodel.adinfo import ADInfo
 from jackdaw.dbmodel.adgroup import Group
 from jackdaw.dbmodel.smbfinger import SMBFinger
@@ -11,6 +11,7 @@ from jackdaw.nest.graph.graphdata import GraphData
 import base64
 import string
 import datetime
+
 
 class Issue:
 	def __init__(self, severity, name, description, confidence, recommendation = None, category = None):
@@ -33,12 +34,12 @@ class Issue:
 			'category' : self.category,	
 		}
 
+
 class Anomalies:
 	def __init__(self, current_app, db_conn = None, db_session = None):
 		self.db_conn = db_conn
 		self.db_session = db_session
 		self.current_app = current_app
-
 
 	def get_user_pwnotreq(self, domainid, page, maxcnt):
 		res = {
@@ -47,26 +48,12 @@ class Anomalies:
 		}
 		pw_notreq_users = []
 
-		qry = self.db_session.session.query(
-			ADUser
-			).filter_by(ad_id = domainid
-			).filter(ADUser.UAC_PASSWD_NOTREQD == True
-			).with_entities(ADUser.id, ADUser.sAMAccountName
-			)
+		qry = self.db_session.session.query(ADUser).filter_by(ad_id=domainid).filter(ADUser.UAC_PASSWD_NOTREQD == True).with_entities(ADUser.id, ADUser.sAMAccountName)
 			
 		qry = qry.paginate(page = page, max_per_page = maxcnt)
 		for uid, username in qry.items:
-			pw_notreq_users.append(
-				{
-					'uid' : uid, 
-					'username' : username
-				}
-			)
-		page = dict(
-			total=qry.total, 
-			current_page=qry.page,
-			per_page=qry.per_page
-		)
+			pw_notreq_users.append({'uid': uid, 'username': username})
+		page = dict(total=qry.total, current_page=qry.page, per_page=qry.per_page)
 
 		res['res'] = pw_notreq_users
 		res['page'] = page
@@ -206,7 +193,6 @@ class Anomalies:
 
 		return res
 
-		
 	def get_user_description(self, domainid, page, maxcnt):
 		res = {
 			'res' : [],
@@ -336,7 +322,6 @@ class Anomalies:
 		res['page'] = page
 
 		return res
-
 
 	def get_smb_domain_mismatch(self, domainid, page, maxcnt):
 		res = {
@@ -521,7 +506,6 @@ class Anomalies:
 				p = Issue('HIGH', 'Unusually large set of users close to domain administrators', '', 100)
 				issues.append(p)
 
-
 		if 'graph_count_kerberoast_to_da' in stat_dict:
 			if stat_dict['graph_count_kerberoast_to_da'] > 0:
 				p = Issue('HIGH', 'User with Kerberoast vulnerability has potential domain administrator access', '', 100)
@@ -536,7 +520,7 @@ class Anomalies:
 		return [x.to_dict() for x in issues], score
 
 	def eval_issues(self, issues):
-		#this is a placeholder, ovbiously need a scoring system implemented here
+		# this is a placeholder, ovbiously need a scoring system implemented here
 		# TODO
 		res = 0
 		for issue in issues:
@@ -696,7 +680,6 @@ class Anomalies:
 			'machine_smb_smb1_dialect_count' : machine_smb_smb1_dialect_count,
 		}
 
-
 		if graphid is not None:
 			if graphid not in self.current_app.config['JACKDAW_GRAPH_DICT']:
 				graph_cache_dir = self.current_app.config['JACKDAW_WORK_DIR'].joinpath('graphcache')
@@ -705,8 +688,6 @@ class Anomalies:
 					raise Exception('Graph cache dir doesnt exists!')
 				else:
 					self.current_app.config['JACKDAW_GRAPH_DICT'][graphid] = self.current_app.config.get('JACKDAW_GRAPH_BACKEND_OBJ').load(current_app.db.session, graphid, graph_dir)
-			
-			
 
 			stat_dict['graph_distances_to_da'] = self.__graph_distance_da(domainid, graphid)
 			stat_dict['graph_count_kerberoast_to_da'] = self.__graph_kerberoast_to_da(domainid, graphid)
@@ -714,4 +695,3 @@ class Anomalies:
 
 		stat_dict['issues'], stat_dict['vuln_score']  = self.eval_stats(stat_dict, domainid)
 		return stat_dict
-

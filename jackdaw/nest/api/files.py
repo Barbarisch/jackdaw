@@ -4,7 +4,7 @@ from jackdaw.dbmodel.netfile import NetFile
 from jackdaw.dbmodel.netshare import NetShare
 from jackdaw.dbmodel.netdacl import NetDACL
 from jackdaw.dbmodel.netdir import NetDir
-from jackdaw.dbmodel.adcomp import Machine
+from jackdaw.dbmodel.admachine import Machine
 
 
 def get_file(domainid, fileid):
@@ -12,16 +12,18 @@ def get_file(domainid, fileid):
 	f = db.session.query(NetFile).get(fileid)
 	return f.to_dict()
 
+
 def get_dir(domainid, dirid):
 	db = current_app.db
 	f = db.session.query(NetDir).get(dirid)
 	return f.to_dict()
 
+
 def search_file_name(domainid, pattern, page, maxcnt):
 	db = current_app.db
 	pattern = pattern['pattern']
 	res = {
-		'res' : [],
+		'res': [],
 		'page': {},
 	}
 
@@ -52,6 +54,7 @@ def search_file_name(domainid, pattern, page, maxcnt):
 	res['page'] = page
 
 	return res
+
 
 def search_file_ext(domainid, pattern, page, maxcnt):
 	db = current_app.db
@@ -88,6 +91,7 @@ def search_file_ext(domainid, pattern, page, maxcnt):
 	res['page'] = page
 
 	return res
+
 
 def search_file_full(domainid, filter, page, maxcnt):
 	db = current_app.db
@@ -164,6 +168,7 @@ def search_file_full(domainid, filter, page, maxcnt):
 	res['page'] = page
 
 	return res
+
 
 def search_file_owner(domainid, ownersid, pattern, page, maxcnt):
 	db = current_app.db

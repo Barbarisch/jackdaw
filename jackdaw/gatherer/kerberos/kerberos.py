@@ -8,7 +8,7 @@ from minikerberos.common.proxy import KerberosProxy
 from jackdaw import logger
 from jackdaw.dbmodel.kerberoast import Kerberoast as KerberoastTable
 from jackdaw.dbmodel.adinfo import ADInfo
-from jackdaw.dbmodel.adcomp import Machine
+from jackdaw.dbmodel.admachine import Machine
 from jackdaw.dbmodel.aduser import ADUser
 from jackdaw.dbmodel import get_session, windowed_query
 
@@ -24,6 +24,7 @@ from minikerberos.protocol.asn1_structs import AP_REQ, TGS_REQ
 from asysocks.common.clienturl import SocksClientURL
 
 from jackdaw.gatherer.progress import *
+
 
 class KerberoastGatherer:
 	def __init__(self, db_session, ad_id, progress_queue = None, show_progress = True, kerb_url = None, domain_name = None, proxy = None):

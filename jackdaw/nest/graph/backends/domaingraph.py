@@ -2,7 +2,7 @@ import copy
 
 from jackdaw import logger
 from jackdaw.dbmodel.adtrust import ADTrust
-from jackdaw.dbmodel.adcomp import Machine
+from jackdaw.dbmodel.admachine import Machine
 from jackdaw.dbmodel.aduser import ADUser
 from jackdaw.dbmodel.adgroup import Group
 from jackdaw.dbmodel.adinfo import ADInfo
@@ -16,11 +16,11 @@ from jackdaw.dbmodel.adobjprops import ADObjProps
 
 
 class JackDawDomainGraph:
-	def __init__(self, dbsession, graph_id, graph_dir, use_cache = False):
+	def __init__(self, dbsession, graph_id, graph_dir, use_cache=False):
 
 		self.dbsession = dbsession
 		self.graph_id = int(graph_id)
-		self.use_cache = False # TODO
+		self.use_cache = False  # TODO
 		self.graph_dir = graph_dir
 		self.graph = None
 		self.adids = []
@@ -31,7 +31,7 @@ class JackDawDomainGraph:
 		self.sid_name_lookup = {}
 		self.label_lookup = {}
 
-	def result_path_add(self, network, path, exclude = [], pathonly = False):
+	def result_path_add(self, network, path, exclude=[], pathonly=False):
 		if pathonly is False:
 			if len(exclude) > 0:
 				if self.check_path_exclude(path, exclude) is False:

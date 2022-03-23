@@ -22,7 +22,7 @@ from jackdaw.dbmodel.adsd import JackDawSD
 from jackdaw.dbmodel.adgroup import Group
 from jackdaw.dbmodel.adinfo import ADInfo
 from jackdaw.dbmodel.aduser import ADUser
-from jackdaw.dbmodel.adcomp import Machine
+from jackdaw.dbmodel.admachine import Machine
 from jackdaw.dbmodel.adou import ADOU
 from jackdaw.dbmodel.adinfo import ADInfo
 from jackdaw.dbmodel.adtrust import ADTrust
@@ -44,9 +44,12 @@ from tqdm import tqdm
 from jackdaw.dbmodel import windowed_query
 
 from jackdaw.nest.graph.construct import GraphConstruct
+
+
 class GraphDecoder(json.JSONDecoder):
 	def __init__(self, *args, **kwargs):
 		json.JSONDecoder.__init__(self, object_hook=self.object_hook, *args, **kwargs)
+
 	def object_hook(self, dct):
 		if 'construct' in dct:
 			dct['construct'] = GraphConstruct.from_dict(dct['construct'])
@@ -54,11 +57,11 @@ class GraphDecoder(json.JSONDecoder):
 
 
 def ace_applies(ace_guid, object_class):
-	'''
+	"""
 	Checks if an ACE applies to this object (based on object classes).
 	Note that this function assumes you already verified that InheritedObjectType is set (via the flag).
 	If this is not set, the ACE applies to all object types.
-	'''
+	"""
 	try:
 		our_ace_guid = OBJECTTYPE_GUID_MAP[object_class]
 	except KeyError:

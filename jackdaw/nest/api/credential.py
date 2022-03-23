@@ -1,22 +1,20 @@
-
 import connexion
 
 from sqlalchemy.exc import IntegrityError
 from jackdaw.dbmodel.credential import Credential
 from jackdaw.dbmodel.hashentry import HashEntry
 from jackdaw.dbmodel.netsession import NetSession
-from jackdaw.dbmodel.adcomp import Machine
+from jackdaw.dbmodel.admachine import Machine
 from jackdaw.dbmodel.aduser import ADUser
 from jackdaw.credentials.credentials import JackDawCredentials
 from jackdaw.utils.md4 import MD4 as NT
 from flask import current_app
 
 
-
 def impacket_upload(domainid):
 	db = current_app.db
 	file_to_upload = connexion.request.files['file_to_upload']
-	#print(file_to_upload.read())
+	# print(file_to_upload.read())
 	ctr = 0
 	fail = 0
 	for cred in Credential.from_impacket_stream(file_to_upload.stream, domainid):
@@ -31,10 +29,11 @@ def impacket_upload(domainid):
 
 	return {'new' : ctr, 'duplicates' : fail }
 
+
 def lsass_upload(domainid, computername = None):
 	db = current_app.db
 	file_to_upload = connexion.request.files['file_to_upload']
-	#print(file_to_upload.read())
+	# print(file_to_upload.read())
 	ctr = 0
 	fail = 0
 	ctr_plain = 0
@@ -64,12 +63,12 @@ def lsass_upload(domainid, computername = None):
 			if computername[-1] != '$':
 				cname = computername + '$'
 			comp = db.session.query(Machine).filter_by(ad_id = domainid).filter(Machine.sAMAccountName == cname).first()
-			#print('COMP %s' % comp)
+			# print('COMP %s' % comp)
 			if comp is None:
 				continue
 			user = db.session.query(ADUser.sAMAccountName).filter_by(ad_id = domainid).filter(ADUser.objectSid == sid).first()
-			#print('USER %s' % user)
-			#print('SID %s' % sid )
+			# print('USER %s' % user)
+			# print('SID %s' % sid )
 			if user is None:
 				continue
 
@@ -83,13 +82,13 @@ def lsass_upload(domainid, computername = None):
 			except IntegrityError:
 				db.session.rollback()
 
+	return {'new' : ctr, 'duplicates' : fail, 'pwnew' : ctr_plain, 'pwduplicates':  fail_plain}
 
-	return {'new' : ctr, 'duplicates' : fail, 'pwnew' : ctr_plain, 'pwduplicates' :  fail_plain }
 
 def aiosmb_upload(domainid):
 	db = current_app.db
 	file_to_upload = connexion.request.files['file_to_upload']
-	#print(file_to_upload.read())
+	# print(file_to_upload.read())
 	ctr = 0
 	fail = 0
 	ctr_plain = 0
@@ -117,6 +116,7 @@ def aiosmb_upload(domainid):
 
 	return {'new' : ctr, 'duplicates' : fail, 'pwnew' : ctr_plain, 'pwduplicates' :  fail_plain }
 
+
 def potfile_upload():
 	disable_usercheck = False
 	disable_passwordcheck = False
@@ -127,9 +127,9 @@ def potfile_upload():
 	gen = HashEntry.from_potfile_stream(file_to_upload.stream)
 
 	creds.add_cracked_passwords_gen(gen, disable_usercheck, disable_passwordcheck)
-	
 
 	return {}
+
 
 def passwords_upload(passwords):
 	def pwit(passwords):
@@ -148,6 +148,7 @@ def passwords_upload(passwords):
 	creds.add_cracked_passwords_gen(gen, disable_usercheck, disable_passwordcheck)
 
 	return {}
+
 
 def passwords_upload_file():
 	def pwit(fs):
@@ -169,6 +170,7 @@ def passwords_upload_file():
 
 	return {}
 
+
 def get_uncracked_current(domainid, hashtype = 'nt'):
 	hashtype = hashtype.upper()
 	db = current_app.db
@@ -177,6 +179,7 @@ def get_uncracked_current(domainid, hashtype = 'nt'):
 	for data in creds.get_uncracked_hashes(hashtype, False):
 		hashes.append(data)
 	return hashes, 200
+
 
 def get_uncracked_all(domainid, hashtype = 'nt'):
 	hashtype = hashtype.upper()
@@ -187,11 +190,13 @@ def get_uncracked_all(domainid, hashtype = 'nt'):
 		hashes.append(data)
 	return hashes, 200
 
+
 def get_cracked_users(domainid):
 	db = current_app.db
 	creds = JackDawCredentials(None, domain_id = domainid, db_session = db.session)
 	rows = creds.get_cracked_users()
 	return rows, 200
+
 
 def get_pwsharing(domainid):
 	db = current_app.db
@@ -203,6 +208,7 @@ def get_pwsharing(domainid):
 		'pw_sharing_notcracked' : pw_sharing_notcracked,
 		'pwsharing_users' : new_pwshare
 	}
+
 
 def get_stats(domainid):
 	db = current_app.db

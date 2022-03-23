@@ -10,9 +10,8 @@ from jackdaw.dbmodel.adinfo import ADInfo
 from jackdaw.dbmodel.edgelookup import EdgeLookup
 from jackdaw.dbmodel.aduser import ADUser
 from jackdaw.dbmodel.adgroup import Group
-from jackdaw.dbmodel.adcomp import Machine
+from jackdaw.dbmodel.admachine import Machine
 from jackdaw.dbmodel.adobjprops import ADObjProps
-
 
 from jackdaw.dbmodel.netshare import NetShare
 from jackdaw.dbmodel.netsession import NetSession
@@ -22,8 +21,6 @@ from jackdaw.dbmodel.edgelookup import EdgeLookup
 from jackdaw.dbmodel.customtarget import CustomTarget
 from jackdaw.dbmodel.customcred import CustomCred
 from jackdaw.dbmodel.graphinfo import GraphInfoAD, GraphInfo
-
-
 
 from jackdaw.dbmodel import create_db, get_session, windowed_query
 
@@ -35,10 +32,11 @@ from jackdaw.nest.graph.graphdata import GraphData
 from jackdaw import logger
 from jackdaw.gatherer.progress import GathererProgressType
 
-#testing
+# testing
 import random
 
 logger = logging.getLogger(__name__)
+
 
 class NestOperator:
 	def __init__(self, operatorid, websocket, db_url, server_out_q, work_dir, graph_type):
@@ -47,7 +45,7 @@ class NestOperator:
 		self.db_session = None
 		self.work_dir = work_dir
 		self.ad_id = None
-		self.show_progress = True #prints progress to console?
+		self.show_progress = True  # prints progress to console?
 		self.graphs = {}
 		self.graph_type = graph_type
 		self.graph_id = None

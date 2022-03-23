@@ -6,11 +6,6 @@ import time
 
 from jackdaw import logger
 from jackdaw.dbmodel import *
-from jackdaw.dbmodel.adinfo import ADInfo
-from jackdaw.dbmodel.adcomp import Machine
-from jackdaw.dbmodel.aduser import ADUser
-from jackdaw.dbmodel.adgroup import Group
-from jackdaw.dbmodel.adou import ADOU
 
 
 JSON_TYPE_TOP_OBJECT = 1  # top level object
@@ -67,8 +62,6 @@ class BHImport2:
         if res:
             return res.id
         else:
-            # print('WTF', sid, adid)
-            # input()
             edgeinfo = EdgeLookup(adid, sid, objtype)
             self.db_session.add(edgeinfo)
             self.db_session.commit()
@@ -98,18 +91,25 @@ class BHImport2:
             pass
             # print(f'Unsupported bloodhound version {bh_version}')
 
+    def add_aces(self, bh_version, ad_id, objectid, aces):
+        for _, ace in aces.items():
+            values = ace['values']
+            dst = values['PrincipalSID']
+            dst_type = values['PrincipalType']
+            if bh_version == 3:
+                if values['RightName'] == 'ExtendedRight' or values['RightName'] == 'WriteProperty':
+                    label = values['AceType']
+                else:
+                    label = values['RightName']
+            else:
+                label = values['RightName']
+            newace = Ace(ad_id, self.graphid, objectid, dst, dst_type, label)
+            self.db_session.add(newace)
+
     def import_domain_v4(self, bh_version, entries):
-        gi = GraphInfo('bloodhound import')
-
-        self.db_session.add(gi)
-        self.db_session.commit()
-        self.db_session.refresh(gi)
-        self.graphid = gi.id
-
         objects = entries['objects']
         arrays = entries['arrays']
         values = entries['values']
-
 
         # isaclprotected = values['IsACLProtected']
         # isdeleted = values['IsDeleted']
@@ -147,14 +147,7 @@ class BHImport2:
         # add aces to global Ace table (these will be turned into edges later)
         if 'Aces' in arrays.keys():
             if len(arrays['Aces']) > 0:
-                aces = arrays['Aces']['objects']
-                for _, ace in aces.items():
-                    values = ace['values']
-                    dst = values['PrincipalSID']
-                    dst_type = values['PrincipalType']
-                    label = values['RightName']
-                    newace = Ace(di.id, self.graphid, objectid, dst, dst_type, label)
-                    self.db_session.add(newace)
+                self.add_aces(bh_version, di.id, objectid, arrays['Aces']['objects'])
 
         # skipped: ChildObjects
         # TODO: Trusts, Links
@@ -237,16 +230,10 @@ class BHImport2:
                             newmember = Member(m.ad_id, self.graphid, objectid, member_sid, member_type)
                             self.db_session.add(newmember)
 
+            # add aces to global Ace table (these will be turned into edges later)
             if 'Aces' in arrays.keys():
                 if len(arrays['Aces']) > 0:
-                    aces = arrays['Aces']['objects']
-                    for _, ace in aces.items():
-                        values = ace['values']
-                        dst = values['PrincipalSID']
-                        dst_type = values['PrincipalType']
-                        label = values['RightName']
-                        newace = Ace(m.ad_id, self.graphid, objectid, dst, dst_type, label)
-                        self.db_session.add(newace)
+                    self.add_aces(bh_version, m.ad_id, objectid, arrays['Aces']['objects'])
 
             self.db_session.commit()
         except Exception as ex:
@@ -313,105 +300,163 @@ class BHImport2:
                     m.lastLogon = convert_to_dt(values['lastlogon'])
                 if 'whencreated' in values:
                     m.whenCreated = convert_to_dt(values['whencreated'])
+
+                prop_arrays = objects['Properties']['arrays']
+                if 'serviceprincipalnames' in prop_arrays and 'values' in prop_arrays['serviceprincipalnames']:
+                    values = prop_arrays['serviceprincipalnames']['values']
+                    for _, spn_str in values.items():
+                        if len(spn_str) > 0:
+                            if m.servicePrincipalName is None or len(m.servicePrincipalName) == 0:
+                                m.servicePrincipalName = spn_str
+                            else:
+                                m.servicePrincipalName = m.servicePrincipalName + '|' + spn_str
+                            new_spn = JackDawSPN.from_spn_str(spn_str, m.objectSid)
+                            new_spn.ad_id = m.ad_id
+                            self.db_session.add(new_spn)
+
+                # Skipping properties: sensitive, trustedtoauth, hasspn, title, homedirectory, userpassword
+                # unixpassword, unicodepassword, sfupassword, sidhistory
             # m.gen_checksum()
 
             self.db_session.add(m)
             edgeinfo = EdgeLookup(m.ad_id, objectid, 'user')
             self.db_session.add(edgeinfo)
 
+            # add aces to global Ace table (these will be turned into edges later)
             if 'Aces' in arrays.keys():
                 if len(arrays['Aces']) > 0:
-                    aces = arrays['Aces']['objects']
-                    for _, ace in aces.items():
-                        values = ace['values']
-                        dst = values['PrincipalSID']
-                        dst_type = values['PrincipalType']
-                        label = values['RightName']
-                        newace = Ace(m.ad_id, self.graphid, objectid, dst, dst_type, label)
-                        self.db_session.add(newace)
+                    self.add_aces(bh_version, m.ad_id, objectid, arrays['Aces']['objects'])
 
             self.db_session.commit()
         except Exception as ex:
             print('import_user_v4', ex)
 
     def import_machine_v4(self, bh_version, entries):
-        try:
-            objects = entries['objects']
-            arrays = entries['arrays']
-            values = entries['values']
+        # try:
+        objects = entries['objects']
+        arrays = entries['arrays']
+        values = entries['values']
 
-            # isaclprotected = values['IsACLProtected']
-            # isdeleted = values['IsDeleted']
-            if 'ObjectIdentifier' in values:
-                objectid = values['ObjectIdentifier']
+        # isaclprotected = values['IsACLProtected']
+        # isdeleted = values['IsDeleted']
+        if 'ObjectIdentifier' in values:
+            objectid = values['ObjectIdentifier']
+        else:
+            objectid = ''
+        # status = values['Status']
+        if 'PrimaryGroupSID' in values:
+            primarygroupsid = values['PrimaryGroupSID']
+        else:
+            primarygroupsid = None
+
+        m = Machine()
+        if 'Properties' in objects.keys():
+            values = objects['Properties']['values']
+
+            if 'domainsid' in values:
+                m.ad_id = self.ads[values['domainsid']]
             else:
-                objectid = ''
-            # status = values['Status']
-            if 'PrimaryGroupSID' in values:
-                primarygroupsid = values['PrimaryGroupSID']
-            else:
-                primarygroupsid = None
-
-            m = Machine()
-            if 'Properties' in objects.keys():
-                values = objects['Properties']['values']
-
-                if 'domainsid' in values:
-                    m.ad_id = self.ads[values['domainsid']]
+                domain_name = values['domain'].lower()
+                if domain_name not in self.adn:
+                    # print('TODO', values, objectid)
+                    # input()
+                    # TODO...domain trusts maybe
+                    return
                 else:
-                    domain_name = values['domain'].lower()
-                    if domain_name not in self.adn:
-                        # print('TODO', values, objectid)
-                        # input()
-                        # TODO...domain trusts maybe
-                        return
-                    else:
-                        m.ad_id = self.adn[domain_name]
-                m.name = values['name'].split('.', 1)[0]
-                m.displayName = m.name
-                m.dn = values['distinguishedname']
-                m.canLogon = values['enabled']
-                m.lastLogonTimestamp = convert_to_dt(values['lastlogontimestamp'])
-                m.pwdLastSet = convert_to_dt(values['pwdlastset'])
-                m.dNSHostName = values['name']
-                m.cn = values['name'].split('.', 1)[0]
-                # temp_account_name = values['name'].split('.', 1)[0] + '$'
-                m.sAMAccountName = m.name + '$'
-                if len(objectid) == 0:
-                    objectid = values['objectid']
-                m.objectSid = objectid
-                m.UAC_TRUSTED_FOR_DELEGATION = values['unconstraineddelegation']
-                if primarygroupsid:
-                    m.primaryGroupID = primarygroupsid.split('-')[-1]
-                if 'description' in values and values['description']:
-                    m.description = values['description']
-                if 'operatingsystem' in values and values['operatingsystem']:
-                    m.operatingSystem = values['operatingsystem']
-                if 'whencreated' in values:
-                    m.whenCreated = convert_to_dt(values['whencreated'])
-            # m.gen_checksum()
-            else:
-                # in some cases there isnt a property block...guess pass on those
-                return
+                    m.ad_id = self.adn[domain_name]
+            m.name = values['name'].split('.', 1)[0]
+            m.displayName = m.name
+            m.dn = values['distinguishedname']
+            m.canLogon = values['enabled']
+            m.lastLogonTimestamp = convert_to_dt(values['lastlogontimestamp'])
+            m.pwdLastSet = convert_to_dt(values['pwdlastset'])
+            m.dNSHostName = values['name']
+            m.cn = values['name'].split('.', 1)[0]
+            m.sAMAccountName = m.name + '$'
+            if len(objectid) == 0:
+                objectid = values['objectid']
+            m.objectSid = objectid
+            m.UAC_TRUSTED_FOR_DELEGATION = values['unconstraineddelegation']
+            if primarygroupsid:
+                m.primaryGroupID = primarygroupsid.split('-')[-1]
+            if 'description' in values and values['description']:
+                m.description = values['description']
+            if 'operatingsystem' in values and values['operatingsystem']:
+                m.operatingSystem = values['operatingsystem']
+            if 'whencreated' in values:
+                m.whenCreated = convert_to_dt(values['whencreated'])
 
-            self.db_session.add(m)
-            edgeinfo = EdgeLookup(m.ad_id, objectid, 'machine')
-            self.db_session.add(edgeinfo)
+            prop_arrays = objects['Properties']['arrays']
+            if 'serviceprincipalnames' in prop_arrays and 'values' in prop_arrays['serviceprincipalnames']:
+                values = prop_arrays['serviceprincipalnames']['values']
+                for _, spn_str in values.items():
+                    if len(spn_str) > 0:
+                        if m.servicePrincipalName is None or len(m.servicePrincipalName) == 0:
+                            m.servicePrincipalName = spn_str
+                        else:
+                            m.servicePrincipalName = m.servicePrincipalName + '|' + spn_str
+                        new_spn = SPNService.from_spn_str(spn_str, m.objectSid)
+                        new_spn.ad_id = m.ad_id
+                        self.db_session.add(new_spn)
 
-            if 'Aces' in arrays.keys():
-                if len(arrays['Aces']) > 0:
-                    aces = arrays['Aces']['objects']
-                    for _, ace in aces.items():
-                        values = ace['values']
-                        dst = values['PrincipalSID']
-                        dst_type = values['PrincipalType']
-                        label = values['RightName']
-                        newace = Ace(m.ad_id, self.graphid, objectid, dst, dst_type, label)
-                        self.db_session.add(newace)
+            # Skipping properties: haslaps, trustedtoauth, lastlogon, sidhistory
+        else:
+            # in some cases there isnt a property block...guess pass on those
+            return
 
-            self.db_session.commit()
-        except Exception as ex:
-            print('import_machine_v4', ex)
+        if 'Sessions' in objects.keys():
+            values = objects['Sessions']['values']
+            if 'Collected' in values and values['Collected'] is True:
+                print('Session data...not supported yet')
+                # sessions = objects['Sessions']['Results']['objects']
+                # for _, ses in sessions.items():
+                #
+                #   self.add_edge(session['UserId'], 'user', session['ComputerId'], 'machine', 'hasSession', m.ad_id)
+                #   self.add_edge(session['ComputerId'], 'machine', session['UserId'], 'user', 'hasSession', m.ad_id)
+                #   self.db_session.add(s)
+                #   userid = ses['UserId']
+                #   machineid = ses['ComputerId']
+                #   new_session = Session(m.ad_id, self.graphid, userid, machineid, 'hasSession')
+                #   self.db_session.add(new_session)
+                #   new_session = Session(m.ad_id, self.graphid, machineid, userid, 'hasSession')
+                #   self.db_session.add(new_session)
+
+        if 'LocalAdmins' in objects.keys():
+            values = objects['Sessions']['values']
+            if 'Collected' in values and values['Collected'] is True:
+                print('LocalAdmins data...not supported yet')
+
+        if 'RemoteDesktopUsers' in objects.keys():
+            values = objects['RemoteDesktopUsers']['values']
+            if 'Collected' in values and values['Collected'] is True:
+                print('RemoteDesktopUsers data...not supported yet')
+
+        if 'DcomUsers' in objects.keys():
+            values = objects['DcomUsers']['values']
+            if 'Collected' in values and values['Collected'] is True:
+                print('DcomUsers data...not supported yet')
+
+        if 'PSRemoteUsers' in objects.keys():
+            values = objects['PSRemoteUsers']['values']
+            if 'Collected' in values and values['Collected'] is True:
+                print('PSRemoteUsers data...not supported yet')
+
+        # add new machine to database
+        # m.gen_checksum()
+        self.db_session.add(m)
+
+        # create objectid to id lookup entry
+        edgeinfo = EdgeLookup(m.ad_id, objectid, 'machine')
+        self.db_session.add(edgeinfo)
+
+        # add aces to global Ace table (these will be turned into edges later)
+        if 'Aces' in arrays.keys():
+            if len(arrays['Aces']) > 0:
+                self.add_aces(bh_version, m.ad_id, objectid, arrays['Aces']['objects'])
+
+        self.db_session.commit()
+        # except Exception as ex:
+        #    print('import_machine_v4', ex)
 
     def import_gpo_v4(self, bh_version, entries):
         try:
@@ -458,16 +503,10 @@ class BHImport2:
             self.db_session.add(edgeinfo)
             self.db_session.commit()
 
+            # add aces to global Ace table (these will be turned into edges later)
             if 'Aces' in arrays.keys():
                 if len(arrays['Aces']) > 0:
-                    aces = arrays['Aces']['objects']
-                    for _, ace in aces.items():
-                        values = ace['values']
-                        dst = values['PrincipalSID']
-                        dst_type = values['PrincipalType']
-                        label = values['RightName']
-                        newace = Ace(m.ad_id, self.graphid, objectid, dst, dst_type, label)
-                        self.db_session.add(newace)
+                    self.add_aces(bh_version, m.ad_id, objectid, arrays['Aces']['objects'])
 
             self.db_session.commit()
         except Exception as ex:
@@ -534,14 +573,7 @@ class BHImport2:
             # add aces to global Ace table (these will be turned into edges later)
             if 'Aces' in arrays.keys():
                 if len(arrays['Aces']) > 0:
-                    aces = arrays['Aces']['objects']
-                    for _, ace in aces.items():
-                        values = ace['values']
-                        dst = values['PrincipalSID']
-                        dst_type = values['PrincipalType']
-                        label = values['RightName']
-                        newace = Ace(m.ad_id, self.graphid, objectid, dst, dst_type, label)
-                        self.db_session.add(newace)
+                    self.add_aces(bh_version, m.ad_id, objectid, arrays['Aces']['objects'])
 
             self.db_session.commit()
         except Exception as ex:
@@ -553,16 +585,30 @@ class BHImport2:
     def import_session(self):
         pass
 
-    def insert_spn(self):
+    def insert_session_edges(self):
         pass
 
-    def insert_edge(self):
-        pass
+    def insert_spn_edges(self):
+        count = self.db_session.query(JackDawSPN).filter_by(service_class='MSSQLSvc').count()
+        iterator = tqdm(range(0, count))
 
-    def insert_all_members(self):
+        q = self.db_session.query(JackDawSPN).filter_by(service_class='MSSQLSvc')
+        for spn in windowed_query(q, JackDawSPN.id, 1000):
+            s = SPNService.from_jackdaw_spn(spn)
+            self.db_session.add(s)
+            if spn.service_class == 'MSSQLSvc':
+                res = self.db_session.query(Machine).filter_by(dNSHostName=spn.computername.upper()).filter(
+                    Machine.ad_id == spn.ad_id).first()
+                if res is not None:
+                    edge = Edge(spn.ad_id, self.graphid, spn.owner_sid, res.objectSid, 'sqladmin')
+                    self.db_session.add(edge)
+                else:
+                    logger.debug('[BHIMPORT2] sqlaldmin add edge cant find machine %s' % spn.computername)
+            iterator.update(1)
+        self.db_session.commit()
+
+    def insert_members_edges(self):
         count = self.db_session.query(Member).count()
-        # print('Testing', count)
-        test = 0
         iterator = tqdm(range(0, count))
 
         q = self.db_session.query(Member)
@@ -571,16 +617,11 @@ class BHImport2:
             src = self.sid_to_id(member.member_sid, member.ad_id)
             edge = Edge(member.ad_id, self.graphid, src, dst, 'member')
             self.db_session.add(edge)
-            test = test + 1
             iterator.update(1)
         self.db_session.commit()
 
-    def insert_all_aces(self):
-        # for all aces update principalsiduuid with proper uuid
-        # count = self.the_database.get_table_count(Aces)
+    def insert_ace_edges(self):
         count = self.db_session.query(Ace).count()
-        # print('Testing', count)
-        test = 0
         iterator = tqdm(range(0, count))
 
         q = self.db_session.query(Ace)
@@ -589,11 +630,11 @@ class BHImport2:
             dst = self.sid_to_id(ace.src_sid, ace.ad_id)
             edge = Edge(ace.ad_id, self.graphid, src, dst, ace.label)
             self.db_session.add(edge)
-            test = test + 1
             iterator.update(1)
         self.db_session.commit()
 
-    def from_zipfile(self, filepath):
+    def from_zipfile(self, filepath, graphid=None):
+        self.graphid = None
         with zipfile.ZipFile(filepath, 'r') as myzip:
             for names in myzip.namelist():
                 try:
@@ -606,12 +647,20 @@ class BHImport2:
 
     def readchunk(self, f):
         try:
-            return f.read(1024)
+            # return f.read(1024)
+            return f.read(65535)
         except Exception as ex:
             return ''
 
     def run(self):
         self.setup_db()
+
+        if self.graphid is None:
+            gi = GraphInfo('bloodhound import')
+            self.db_session.add(gi)
+            self.db_session.commit()
+            self.db_session.refresh(gi)
+            self.graphid = gi.id
 
         # for all files in zip get meta information on them first
         all_json_files = {}
@@ -627,9 +676,6 @@ class BHImport2:
 
         print(f'Processing domains json {all_json_files["domains"]}')
         with open(all_json_files['domains'][1], 'r') as f:
-            #data = f.read()
-            #self.json_parser.json_parser(all_json_files['domains'][0], data)
-            #del data
             self.json_parser.json_parser2(all_json_files['domains'][0], f)
 
         #print('pause')
@@ -638,9 +684,6 @@ class BHImport2:
         print(f'Processing groups json {all_json_files["groups"]}')
         with open(all_json_files['groups'][1], 'r') as f:
             self.json_parser.json_parser2(all_json_files['groups'][0], f)
-            #data = f.read()
-            #self.json_parser.json_parser(all_json_files['groups'][0], data)
-            #del data
 
         #print('pause')
         #input()
@@ -648,9 +691,6 @@ class BHImport2:
         print(f'Processing users json {all_json_files["users"]}')
         with open(all_json_files['users'][1], 'r') as f:
             self.json_parser.json_parser2(all_json_files['users'][0], f)
-            #data = f.read()
-            #self.json_parser.json_parser(all_json_files['users'][0], data)
-            #del data
 
         #print('pause')
         #input()
@@ -658,9 +698,6 @@ class BHImport2:
         print(f'Processing computers json {all_json_files["computers"]}')
         with open(all_json_files['computers'][1], 'r') as f:
             self.json_parser.json_parser2(all_json_files['computers'][0], f)
-            # data = f.read()
-            # self.json_parser.json_parser(all_json_files['computers'][0], data)
-            # del data
 
         #print('pause')
         #input()
@@ -668,9 +705,6 @@ class BHImport2:
         print(f'Processing gpos json {all_json_files["gpos"]}')
         with open(all_json_files['gpos'][1], 'r') as f:
             self.json_parser.json_parser2(all_json_files['gpos'][0], f)
-            # data = f.read()
-            # self.json_parser.json_parser(all_json_files['gpos'][0], data)
-            # del data
 
         #print('pause')
         #input()
@@ -678,18 +712,19 @@ class BHImport2:
         print(f'Processing ous json {all_json_files["ous"]}')
         with open(all_json_files['ous'][1], 'r') as f:
             self.json_parser.json_parser2(all_json_files['ous'][0], f)
-            # data = f.read()
-            # self.json_parser.json_parser(all_json_files['ous'][0], data)
-            # del data
 
         #print('pause')
         #input()
 
         # create edges
+        # print('Creating edges from Sessions')
+        # self.insert_session_edges()
+        print('Creating edges from SPNs')
+        self.insert_spn_edges()
         print('Creating edges from group memberships')
-        self.insert_all_members()
+        self.insert_members_edges()
         print('Creating edges from aces')
-        self.insert_all_aces()
+        self.insert_ace_edges()
 
         # original call order
         # self.setup_db()
@@ -718,8 +753,6 @@ class JsonParser:
         self.f = None
 
     def next_chunk(self):
-        # print('Getting next chunk')
-        # input()
         return self.bhimporter.readchunk(self.f)
 
     def get_next_char(self):

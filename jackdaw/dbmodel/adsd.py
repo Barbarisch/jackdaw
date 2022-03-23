@@ -1,10 +1,10 @@
-
 from . import Basemodel
 import datetime
 from sqlalchemy.orm import relationship
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
 import json
 from jackdaw.dbmodel.utils.serializer import Serializer
+
 
 class JackDawSD(Basemodel, Serializer):
 	__tablename__ = 'adsds'
@@ -17,7 +17,6 @@ class JackDawSD(Basemodel, Serializer):
 	object_type = Column(String, index=True)
 	sd_hash = Column(String, index=True)
 	sd = Column(String)
-
 
 	@staticmethod
 	def from_dict(d):

@@ -1,4 +1,3 @@
-
 import asyncio
 import traceback
 from sqlalchemy.orm import session
@@ -25,13 +24,12 @@ from jackdaw.nest.ws.operator.operator import NestOperator
 from jackdaw.nest.ws.agent.agent import JackDawAgent
 from jackdaw.nest.ws.guac.guacproxy import GuacProxy
 from jackdaw.dbmodel import get_session
-from jackdaw.dbmodel.adcomp import Machine
+from jackdaw.dbmodel.admachine import Machine
 from jackdaw.dbmodel.dnslookup import DNSLookup
 from jackdaw.dbmodel.credential import Credential
 from jackdaw.dbmodel.customcred import CustomCred
 from jackdaw.dbmodel.customtarget import CustomTarget
 from jackdaw.nest.ws.remoteagent.wsnet.router import WSNETRouterHandler
-
 
 
 # https://gist.github.com/artizirk/04eb23d957d7916c01ca632bb27d5436

@@ -10,7 +10,7 @@ from jackdaw.dbmodel.spnservice import SPNService
 from jackdaw.dbmodel.adgroup import Group
 from jackdaw.dbmodel.adinfo import ADInfo
 from jackdaw.dbmodel.aduser import ADUser
-from jackdaw.dbmodel.adcomp import Machine
+from jackdaw.dbmodel.admachine import Machine
 from jackdaw.dbmodel.adou import ADOU
 from jackdaw.dbmodel.adinfo import ADInfo
 from jackdaw.dbmodel.adgpo import GPO
@@ -29,6 +29,7 @@ from jackdaw.gatherer.ldap.agent.common import *
 from jackdaw.gatherer.ldap.agent.agent import LDAPGathererAgent
 
 from tqdm import tqdm
+
 
 class BaseCollector:
 	def __init__(self, session, ldap_mgr, agent_cnt = None, progress_queue = None, show_progress = True, members_file_handle = None, sd_file_handle = None, stream_data = False):

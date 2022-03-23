@@ -11,7 +11,7 @@ from jackdaw.dbmodel.spnservice import SPNService
 from jackdaw.dbmodel.adgroup import Group
 from jackdaw.dbmodel.adinfo import ADInfo
 from jackdaw.dbmodel.aduser import ADUser
-from jackdaw.dbmodel.adcomp import Machine
+from jackdaw.dbmodel.admachine import Machine
 from jackdaw.dbmodel.adou import ADOU
 from jackdaw.dbmodel.adinfo import ADInfo
 from jackdaw.dbmodel.adgpo import GPO

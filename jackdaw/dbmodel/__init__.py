@@ -16,10 +16,10 @@ from winacl.dtyp.ace import ADS_ACCESS_MASK, AceFlags
 Basemodel = declarative_base()
 
 
-def windowed_query(q, column, windowsize, is_single_entity = True):
-	""""Break a Query into chunks on a given column."""
+def windowed_query(q, column, windowsize, is_single_entity=True):
+	""" Break a Query into chunks on a given column. """
 
-	#single_entity = q.is_single_entity
+	# single_entity = q.is_single_entity
 	q = q.add_column(column).order_by(column)
 	last_id = None
 
@@ -40,11 +40,11 @@ def windowed_query(q, column, windowsize, is_single_entity = True):
 
 @event.listens_for(Engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):
-	##
-	## This function runs after the sqlite connection is made, and speeds up the insert operations considerably
-	## Sadly I could not find a way to limit the execution to sqlite so other DBs will trow an error :(
-	## TODO: fix this
-	##
+	"""
+	This function runs after the sqlite connection is made, and speeds up the insert operations considerably
+	Sadly I could not find a way to limit the execution to sqlite so other DBs will trow an error :(
+	TODO: fix this
+	"""
 	is_sqlite = os.getenv('JACKDAW_SQLITE', '0')
 	if is_sqlite == '0':
 		return
@@ -101,7 +101,7 @@ def bc(x):
 
 
 from .adgroup import *
-from .adcomp import *
+from .admachine import *
 from .adinfo import *
 from .aduser import *
 from .adou import *
@@ -142,6 +142,7 @@ from .smbfile import SMBFile
 from .kerberostickets import KerberosTicket
 from .ace import Ace
 from .member import Member
+from .session import Session
 
 
 def create_db(connection, verbosity = 0, inmemory = False):
@@ -151,7 +152,7 @@ def create_db(connection, verbosity = 0, inmemory = False):
 	Session = sessionmaker(engine)
 	try:
 		session = Session()
-		#inserting test data...
+		# inserting test data...
 		session.add(CustomCred('victim', 'password', 'Passw0rd!1', 'testcred', domain='TEST'))
 		session.add(CustomCred('victim', 'password', 'Passw0rd!1', 'testcred', domain='TEST2'))
 		session.add(CustomCred('victim', 'password', 'Passw0rd!1', 'testcred', domain='TEST3'))
@@ -172,7 +173,7 @@ def create_db(connection, verbosity = 0, inmemory = False):
 
 def get_session(connection, verbosity = 0):
 	logging.debug('Connecting to DB')
-	engine = create_engine(connection, echo=True if verbosity > 1 else False) #'sqlite:///dump.db'	
+	engine = create_engine(connection, echo=True if verbosity > 1 else False)
 	logging.debug('Creating session')
 	# create a configured "Session" class
 	Session = sessionmaker(bind=engine)
@@ -181,24 +182,24 @@ def get_session(connection, verbosity = 0):
 	
 	
 am_lookup_table = {
-			ADS_ACCESS_MASK.CREATE_CHILD : 'ace_mask_create_child',
-			ADS_ACCESS_MASK.DELETE_CHILD : 'ace_mask_delete_child',
-			ADS_ACCESS_MASK.ACTRL_DS_LIST : 'ace_mask_actrl_ds_list',
-			ADS_ACCESS_MASK.SELF : 'ace_mask_self',
-			ADS_ACCESS_MASK.READ_PROP : 'ace_mask_read_prop',
-			ADS_ACCESS_MASK.WRITE_PROP : 'ace_mask_write_prop',
-			ADS_ACCESS_MASK.DELETE_TREE : 'ace_mask_delete_tree',
-			ADS_ACCESS_MASK.LIST_OBJECT : 'ace_mask_list_object',
-			ADS_ACCESS_MASK.CONTROL_ACCESS : 'ace_mask_control_access',
-			ADS_ACCESS_MASK.DELETE : 'ace_mask_delete',
-			ADS_ACCESS_MASK.READ_CONTROL : 'ace_mask_read_control',
-			ADS_ACCESS_MASK.WRITE_DACL : 'ace_mask_write_dacl',
-			ADS_ACCESS_MASK.WRITE_OWNER : 'ace_mask_write_owner',
-			ADS_ACCESS_MASK.SYNCHRONIZE : 'ace_mask_synchronize',
-			ADS_ACCESS_MASK.ACCESS_SYSTEM_SECURITY : 'ace_mask_access_system_security',
-			ADS_ACCESS_MASK.MAXIMUM_ALLOWED : 'ace_mask_maximum_allowed',
-			ADS_ACCESS_MASK.GENERIC_ALL : 'ace_mask_generic_all',
-			ADS_ACCESS_MASK.GENERIC_EXECUTE : 'ace_mask_generic_execute',
-			ADS_ACCESS_MASK.GENERIC_WRITE : 'ace_mask_generic_write',
-			ADS_ACCESS_MASK.GENERIC_READ : 'ace_mask_generic_read',
-		}
+	ADS_ACCESS_MASK.CREATE_CHILD: 'ace_mask_create_child',
+	ADS_ACCESS_MASK.DELETE_CHILD: 'ace_mask_delete_child',
+	ADS_ACCESS_MASK.ACTRL_DS_LIST: 'ace_mask_actrl_ds_list',
+	ADS_ACCESS_MASK.SELF: 'ace_mask_self',
+	ADS_ACCESS_MASK.READ_PROP: 'ace_mask_read_prop',
+	ADS_ACCESS_MASK.WRITE_PROP: 'ace_mask_write_prop',
+	ADS_ACCESS_MASK.DELETE_TREE: 'ace_mask_delete_tree',
+	ADS_ACCESS_MASK.LIST_OBJECT: 'ace_mask_list_object',
+	ADS_ACCESS_MASK.CONTROL_ACCESS: 'ace_mask_control_access',
+	ADS_ACCESS_MASK.DELETE: 'ace_mask_delete',
+	ADS_ACCESS_MASK.READ_CONTROL: 'ace_mask_read_control',
+	ADS_ACCESS_MASK.WRITE_DACL: 'ace_mask_write_dacl',
+	ADS_ACCESS_MASK.WRITE_OWNER: 'ace_mask_write_owner',
+	ADS_ACCESS_MASK.SYNCHRONIZE: 'ace_mask_synchronize',
+	ADS_ACCESS_MASK.ACCESS_SYSTEM_SECURITY: 'ace_mask_access_system_security',
+	ADS_ACCESS_MASK.MAXIMUM_ALLOWED: 'ace_mask_maximum_allowed',
+	ADS_ACCESS_MASK.GENERIC_ALL: 'ace_mask_generic_all',
+	ADS_ACCESS_MASK.GENERIC_EXECUTE: 'ace_mask_generic_execute',
+	ADS_ACCESS_MASK.GENERIC_WRITE: 'ace_mask_generic_write',
+	ADS_ACCESS_MASK.GENERIC_READ: 'ace_mask_generic_read',
+}

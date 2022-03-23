@@ -1,8 +1,6 @@
-
-
 import connexion
 from jackdaw.dbmodel.netsession import NetSession
-from jackdaw.dbmodel.adcomp import Machine
+from jackdaw.dbmodel.admachine import Machine
 from jackdaw.dbmodel.aduser import ADUser
 from flask import current_app
 import json
@@ -20,6 +18,7 @@ def session_list(domainid):
 		sessions[mid]['sessions'].append(session.username)
 
 	return sessions
+
 
 def session_add(domainid, session):
 	db = current_app.db
@@ -46,6 +45,7 @@ def session_add(domainid, session):
 		db.session.rollback()
 
 	return 'Session created!', 200
+
 
 def aiosmb_upload(domainid, filetype):
 	db = current_app.db
@@ -94,5 +94,3 @@ def aiosmb_upload(domainid, filetype):
 			db.session.commit()
 		except:
 			db.session.rollback()
-			
-	

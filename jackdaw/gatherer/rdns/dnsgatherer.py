@@ -1,11 +1,10 @@
-
 import copy
 import asyncio
 from jackdaw import logger
 from jackdaw.dbmodel import get_session, windowed_query
 from jackdaw.dbmodel.dnslookup import DNSLookup
 from jackdaw.dbmodel.adinfo import ADInfo
-from jackdaw.dbmodel.adcomp import Machine
+from jackdaw.dbmodel.admachine import Machine
 from jackdaw.dbmodel.neterror import NetError
 from jackdaw.gatherer.progress import GathererProgressType, GathererProgress, MSGTYPE
 from sqlalchemy import func

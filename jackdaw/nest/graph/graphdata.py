@@ -1,9 +1,9 @@
-
-
 import math
+
 
 class NodeNotFoundException(Exception):
 	pass
+
 
 class GraphNode:
 	def __init__(self, gid, name, domainid, gtype = None, properties = {}, owned = False, highvalue = False):

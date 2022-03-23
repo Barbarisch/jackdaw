@@ -22,7 +22,7 @@ from jackdaw.dbmodel.edgelookup import EdgeLookup
 from jackdaw.dbmodel.edge import Edge
 from jackdaw.dbmodel.aduser import ADUser
 from jackdaw.dbmodel.adinfo import ADInfo
-from jackdaw.dbmodel.adcomp import Machine
+from jackdaw.dbmodel.admachine import Machine
 from jackdaw.dbmodel.adou import ADOU
 from jackdaw.dbmodel.adobjprops import ADObjProps
 from jackdaw import logger

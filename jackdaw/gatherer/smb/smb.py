@@ -21,7 +21,7 @@ from jackdaw.dbmodel.netsession import NetSession
 from jackdaw.dbmodel.localgroup import LocalGroup
 from jackdaw.dbmodel.smbfinger import SMBFinger
 from jackdaw.dbmodel.adinfo import ADInfo
-from jackdaw.dbmodel.adcomp import Machine
+from jackdaw.dbmodel.admachine import Machine
 from jackdaw.dbmodel.neterror import NetError
 from jackdaw.dbmodel.regsession import RegSession
 

@@ -14,7 +14,7 @@ from tqdm import tqdm
 from jackdaw import logger
 from jackdaw.dbmodel import get_session, windowed_query
 from jackdaw.dbmodel.adinfo import ADInfo
-from jackdaw.dbmodel.adcomp import Machine
+from jackdaw.dbmodel.admachine import Machine
 from jackdaw.dbmodel.neterror import NetError
 
 from jackdaw.common.cpucount import get_cpu_count
@@ -24,6 +24,7 @@ from jackdaw.gatherer.progress import *
 from aiosmb.commons.connection.url import SMBConnectionURL
 from aiosmb.commons.utils.extb import format_exc
 from sqlalchemy import func
+
 
 class SMBFileGatherer:
 	def __init__(self, db_conn, ad_id, smb_mgr, depth = 10, worker_cnt = None, progress_queue = None, show_progress = True, stream_data = False, to_file = None, target_filters = []):

@@ -4,6 +4,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy import Column, Integer, String, ForeignKey
 from jackdaw.dbmodel.utils.serializer import Serializer
 
+
 class MachineConstrainedDelegation(Basemodel, Serializer):
 	__tablename__ = 'adconstrainedmachine'
 
